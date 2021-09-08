@@ -17,6 +17,9 @@ function deepTravel(config, fuc) {
 
 const homeRouter = []
 
+console.log('-- stageConfig --')
+console.log(stageConfig)
+
 deepTravel(stageConfig, viewConfig => {
   // 构造舞台view路由
   const viewRouter = {}

@@ -1,5 +1,8 @@
 import homeRouter from './home-router'
 
+console.log('-- homeRouter --')
+console.log(homeRouter)
+
 const routes = [
   {
     path: '/',
