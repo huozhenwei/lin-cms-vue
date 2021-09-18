@@ -2,14 +2,14 @@
   <div class="container">
     <div class="title">期刊内容列表</div>
     <div class="add-button">
-      <el-button type="primary">新增内容</el-button>
+      <el-button type="primary" @click="handAdd">新增内容</el-button>
     </div>
     <div class="table-container">
       <el-table :data="contentList">
         <el-table-column label="序号" width="60" type="index"></el-table-column>
         <el-table-column label="类型" prop="type">
           <template slot-scope="scope">
-            {{type[scope.row.type]}}
+            {{ type[scope.row.type] }}
           </template>
         </el-table-column>
         <el-table-column label="标题" prop="title"></el-table-column>
@@ -31,28 +31,123 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right">
           <template slot-scope="scope">
-            <el-button @click="handleEdit(scope.row)" v-permission="{ permission: '编辑内容', type: 'disabled'}">编辑</el-button>
-            <el-button type="danger" @click="handleDelete(scope.row)" v-permission="{ permission: '删除内容', type: 'disabled'}">删除</el-button>
+            <el-button @click="handleEdit(scope.row)" v-permission="{ permission: '编辑内容', type: 'disabled'}">编辑
+            </el-button>
+            <el-button type="danger" @click="handleDelete(scope.row)"
+                       v-permission="{ permission: '删除内容', type: 'disabled'}">删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
+    <el-dialog
+        :title="dialogTitle"
+        width="800px"
+        :visible.sync="showDialog"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        @close="resetForm"
+    >
+      <el-form ref="form" :model="temp" label-width="90px" :rules="rules">
+        <el-form-item label="内容封面" prop="image">
+          <upload-imgs ref="uploadEle" :value="contentImgData" :max-num="1"></upload-imgs>
+        </el-form-item>
+        <el-form-item label="内容类型" prop="type">
+          <el-radio v-model="temp.type" :label="100">电影</el-radio>
+          <el-radio v-model="temp.type" :label="200">音乐</el-radio>
+          <el-radio v-model="temp.type" :label="300">句子</el-radio>
+        </el-form-item>
+        <el-form-item label="内容标题" prop="title">
+          <el-col :span="11">
+            <el-input v-model="temp.title"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="内容介绍" prop="content">
+          <el-col :span="11">
+            <el-input type="textarea" v-model="temp.content" :rows="2"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="音乐外链" prop="url">
+          <el-col :span="11">
+            <el-input v-model="temp.url"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="发布时间" prop="pubdate">
+          <el-date-picker v-model="temp.pubdate" type="date" placeholder="请选择日期"></el-date-picker>
+        </el-form-item>
+        <el-form-item label="有效状态">
+          <el-switch v-model="temp.status" :active-value="1" :inactive-value="0"></el-switch>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showDialog = false">取 消</el-button>
+        <el-button type="primary" @click="dialogTitle === '新增内容' ? confirmAdd() : confirmEdit()">保 存</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
 import ContentModel from '@/models/content'
+import UploadImgs from '../../components/base/upload-imgs/index'
 
 export default {
   name: 'contentList',
+  components: { UploadImgs },
   data() {
     return {
       contentList: [],
       type: {
         100: '电影',
         200: '音乐',
-        300: '句子'
-      }
+        300: '句子',
+      },
+      dialogTitle: '',
+      showDialog: false,
+      temp: {
+        // 对应数据表字段
+        id: null,
+        image: null,
+        type: null,
+        title: null,
+        content: null,
+        url: null,
+        pubdate: '',
+        status: '',
+      },
+      rules: {
+        image: [{
+          required: true,
+          message: '内容封面不能为空',
+          trigger: 'blur',
+        }],
+        type: [{
+          required: true,
+          message: '请指定内容类型',
+          trigger: 'blur',
+        }],
+        title: [{
+          required: true,
+          message: '内容标题不能为空',
+          trigger: 'blur',
+        }],
+        content: [{
+          required: true,
+          message: '内容介绍不能为空',
+          trigger: 'blur',
+        }],
+        url: [{
+          type: 'url',
+          message: 'url格式不正确',
+          trigger: 'blur',
+        }],
+        pubdate: [{
+          required: true,
+          message: '发布日期不能为空',
+          trigger: 'blur',
+        }],
+      },
+      contentImgData: [],
     }
   },
   created() {
@@ -67,7 +162,37 @@ export default {
     },
     handleDelete(row) {
       console.log(row)
-    }
+    },
+    handAdd() {
+      this.dialogTitle = '新增内容'
+      this.showDialog = !this.showDialog
+    },
+    async confirmAdd() {
+      // 拿到图片组件内容
+      const images = await this.$refs.uploadEle.getValue()
+      this.temp.image = images.length < 1 ? '' : images[0].src
+
+      this.$refs.form.validate(async valid => {
+        if (valid) {
+          console.log(this.temp)
+          delete this.temp.id
+          const res = await ContentModel.addContent(this.temp)
+          this.showDialog = false
+          this.$message.success(res.message)
+          await this.getContentList()
+        }
+      })
+    },
+    handEdit() {
+      this.dialogTitle = '编辑内容'
+      this.showDialog = !this.showDialog
+    },
+    confirmEdit() {
+    },
+    resetForm() {
+      this.$refs.form.resetFields()
+      this.contentImgData = []
+    },
   },
 }
 </script>
