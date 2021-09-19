@@ -31,6 +31,7 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right">
           <template slot-scope="scope">
+            <!-- 作用域插槽 -->
             <el-button @click="handleEdit(scope.row)" v-permission="{ permission: '编辑内容', type: 'disabled'}">编辑
             </el-button>
             <el-button type="danger" @click="handleDelete(scope.row)"
@@ -53,9 +54,9 @@
           <upload-imgs ref="uploadEle" :value="contentImgData" :max-num="1"></upload-imgs>
         </el-form-item>
         <el-form-item label="内容类型" prop="type">
-          <el-radio v-model="temp.type" :label="100">电影</el-radio>
-          <el-radio v-model="temp.type" :label="200">音乐</el-radio>
-          <el-radio v-model="temp.type" :label="300">句子</el-radio>
+          <el-radio v-model="temp.type" :disabled="dialogTitle === '编辑内容'" :label="100">电影</el-radio>
+          <el-radio v-model="temp.type" :disabled="dialogTitle === '编辑内容'" :label="200">音乐</el-radio>
+          <el-radio v-model="temp.type" :disabled="dialogTitle === '编辑内容'" :label="300">句子</el-radio>
         </el-form-item>
         <el-form-item label="内容标题" prop="title">
           <el-col :span="11">
@@ -158,7 +159,19 @@ export default {
       this.contentList = await ContentModel.getContentList()
     },
     handleEdit(row) {
-      console.log(row)
+      this.dialogTitle = '编辑内容'
+      this.showDialog = !this.showDialog
+
+      this.temp.id = row.id
+      this.temp.image = row.image
+      this.temp.type = row.type
+      this.temp.title = row.title
+      this.temp.content = row.content
+      this.temp.url = row.url
+      this.temp.pubdate = row.pubdate
+      this.temp.status = row.status
+
+      this.contentImgData.push({ display: row.image })
     },
     handleDelete(row) {
       console.log(row)
@@ -187,7 +200,21 @@ export default {
       this.dialogTitle = '编辑内容'
       this.showDialog = !this.showDialog
     },
-    confirmEdit() {
+    async confirmEdit() {
+      const images = await this.$refs.uploadEle.getValue()
+      this.temp.image = images.length < 1 ? '' : images[0].display // 编辑的时候用这个，绕开form 校验
+
+      this.$refs.form.validate(async valid => {
+        if (valid) {
+          console.log(this.temp)
+          const _id = this.temp.id
+          delete this.temp.id
+          const res = await ContentModel.editContent(_id, this.temp)
+          this.showDialog = false
+          this.$message.success(res.message)
+          await this.getContentList()
+        }
+      })
     },
     resetForm() {
       this.$refs.form.resetFields()
