@@ -15,6 +15,15 @@ const contentRouter = {
       inNav: true,
       icon: 'iconfont icon-tushugunali'
     },
+    {
+      name: 'flow',
+      title: '最新期刊',
+      type: 'view',
+      route: '/content/flow',
+      filePath: 'views/content/Flow.vue',
+      inNav: true,
+      icon: 'iconfont icon-tushugunali'
+    },
   ],
 }
 export default contentRouter
