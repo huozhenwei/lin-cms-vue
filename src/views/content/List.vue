@@ -85,6 +85,13 @@
         <el-button type="primary" @click="dialogTitle === '新增内容' ? confirmAdd() : confirmEdit()">保 存</el-button>
       </span>
     </el-dialog>
+    <el-dialog title="提示" :visible.sync="showDeleteDialog" width="400px">
+      <span>确认删除内容吗？</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showDeleteDialog = false">取 消</el-button>
+        <el-button type="danger" @click="confirmDelete">删除</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -149,6 +156,7 @@ export default {
         }],
       },
       contentImgData: [],
+      showDeleteDialog: false,
     }
   },
   created() {
@@ -175,6 +183,16 @@ export default {
     },
     handleDelete(row) {
       console.log(row)
+      this.showDeleteDialog = true
+      this.temp.id = row.id
+      this.temp.type = row.type
+    },
+    async confirmDelete() {
+      this.showDeleteDialog = false
+      // console.log(id)
+      const res = await ContentModel.deleteContent(this.temp.id, this.temp.type)
+      this.$message.success(res.message)
+      await this.getContentList()
     },
     handAdd() {
       this.dialogTitle = '新增内容'
