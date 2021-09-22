@@ -2,7 +2,7 @@
   <div class="container">
     <div class="title">最新期刊</div>
     <div class="add-button">
-      <el-button type="primary" @click="handleAdd" v-permission="'新增最细期刊'">添加期刊</el-button>
+      <el-button type="primary" @click="handleAdd" v-permission="'新增最新期刊'">添加期刊</el-button>
     </div>
     <!-- 列表 -->
     <div class="table-container">
@@ -24,8 +24,8 @@
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button @click="handleEdit(scope.row)" v-permission="'编辑最新期刊列表'">编辑</el-button>
-            <el-button type="danger" @click="handleDelete(scope.row.id)" v-permission="'删除最新期刊列表内容'">删除</el-button>
+            <el-button @click="handleEdit(scope.row)" v-permission="{ permission: '编辑最新期刊列表', type: 'disabled'}">编辑</el-button>
+            <el-button type="danger" @click="handleDelete(scope.row.id)" v-permission="{ permission: '删除最新期刊列表', type: 'disabled'}">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
